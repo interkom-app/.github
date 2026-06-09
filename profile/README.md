@@ -3,9 +3,10 @@
 > A private social network for your company.
 
 Chat, group chats, channels, company announcements, stories, voice notes,
-presence, and search — workspace-scoped, with no public feed — across **iOS,
-macOS, and the web**. Built on **Supabase** (Postgres + RLS, Auth, Realtime,
-Storage, Edge Functions) as the backend of record.
+audio/video calls, presence, and search — **end-to-end encrypted**,
+workspace-scoped, with no public feed — across **iOS, macOS, and the web**.
+Built on a lean-native **AWS** backend (Cognito, API Gateway + Lambda over
+Aurora, AWS IoT, S3 / CloudFront).
 
 🌐 [interkom.app](https://interkom.app) &nbsp;·&nbsp; 💬 [web.interkom.app](https://web.interkom.app)
 
@@ -23,8 +24,8 @@ Storage, Edge Functions) as the backend of record.
 
 | Repo | Purpose |
 | --- | --- |
-| [`interkomkit`](https://github.com/interkom-app/interkomkit) | Swift package — domain models, Supabase repositories, caching, push, design tokens. Consumed by `interkom-ios` and `interkom-mac`. Also home to **`FEATURES.md`**, the canonical capability inventory for all three clients. |
-| [`supabase`](https://github.com/interkom-app/supabase) | Database migrations and Edge Functions for the shared Supabase project. |
+| [`interkomkit`](https://github.com/interkom-app/interkomkit) | Swift package — domain models, AWS-backed repositories, caching, realtime, push, E2EE, and design tokens. Consumed by `interkom-ios` and `interkom-mac`. Also home to **`FEATURES.md`**, the canonical capability inventory for all three clients. |
+| [`interkom-aws`](https://github.com/interkom-app/interkom-aws) | Infrastructure-as-code (Terraform) + backend services — Cognito, API Gateway + Lambda over Aurora, AWS IoT realtime, S3 / CloudFront. |
 
 ### Marketing & releases
 
@@ -37,8 +38,10 @@ Cloned side-by-side, the Swift clients use a local `.package(path: "../interkomk
 
 ## Features
 
-- **Workspaces** with invites, admin controls, per-workspace settings and profiles
+- **Workspaces** with invites, admin controls, per-workspace settings and profiles, and multi-account switching
 - **DMs, group chats, and channels** with reactions, replies, mentions, voice messages, files, and images
+- **End-to-end encryption** — per-device key wrapping; on encrypted workspaces the server only ever stores ciphertext it can't read
+- **Audio / video calls** with screen sharing and an in-call group grid — CallKit on iOS, in-app ringing on macOS (web in progress)
 - **Announcements channel** — company-wide feed of posts (admins post; everyone reads)
 - **Stories / reels** for lightweight, 24-hour async updates
 - **Presence & live updates** — typing indicators, read state, realtime delivery
@@ -49,10 +52,16 @@ See [`interkomkit/FEATURES.md`](https://github.com/interkom-app/interkomkit/blob
 
 ## Backend
 
-A single Supabase project shared by every client: Postgres with row-level
-security policies, Auth, Realtime channels for live chat / typing / presence,
-Storage for attachments and avatars, and Edge Functions for the bits that
-don't fit in SQL. Schema changes live in [`supabase`](https://github.com/interkom-app/supabase).
+A lean-native **AWS** stack shared by every client, replacing the original
+Supabase backend:
+
+- **Amazon Cognito** — authentication and user pools
+- **API Gateway (HTTP API) + AWS Lambda** — a data-API over **Aurora Serverless v2 (PostgreSQL)**
+- **AWS IoT Core (MQTT)** — realtime chat, typing, presence, and call signaling
+- **Amazon S3 + CloudFront** — attachments, avatars, and media
+- **Stripe** for billing; **APNs** for push
+
+Infrastructure and services live in [`interkom-aws`](https://github.com/interkom-app/interkom-aws).
 
 ## Status
 
